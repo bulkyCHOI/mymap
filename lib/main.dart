@@ -39,6 +39,7 @@ class MapSampleState extends State<MapSample> {
 
   int _polygonIdCounter = 1;
   int _polylineIdCounter = 1;
+  int _markerCounter = 1;
 
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
@@ -53,8 +54,9 @@ class MapSampleState extends State<MapSample> {
   void _setMarker(LatLng point){
     setState(() {
       _markers.add(
-        Marker(markerId: MarkerId('marker'), position: point),
+        Marker(markerId: MarkerId('marker'+_markerCounter.toString()), position: point),
       );
+      _markerCounter++;
     });
   }
 
@@ -75,17 +77,21 @@ class MapSampleState extends State<MapSample> {
   void _setPolyline(List<PointLatLng> points) {
     final String polylineIdVal = 'polyline_$_polylineIdCounter';
     _polylineIdCounter++;
-
+    var result = points.map((point) => LatLng(point.latitude, point.longitude),).toList();
     _polylines.add(
       Polyline(polylineId: PolylineId(polylineIdVal),
         width: 2,
         color: Colors.blue,
-        points: points
-          .map(
-            (point) => LatLng(point.latitude, point.longitude),
-        ).toList(),
+        // points: points
+        //   .map(
+        //     (point) => LatLng(point.latitude, point.longitude),
+        // ).toList(),
+        points: result,
       )
     );
+    print(points);
+    print("\n-------------------\n");
+    print(result);
   }
 
   @override
@@ -123,7 +129,9 @@ class MapSampleState extends State<MapSample> {
                   var directions = await LocationService().getDirections(_originController.text, _destinationController.text);
                   // var place = await LocationService().getPlace(_searchController.text);
                   // _goToPlace(place);
+
                   _goToPlace(directions['start_location']['lat'],directions['start_location']['lng']);
+                  _setMarker(LatLng(directions['end_location']['lat'], directions['end_location']['lng']));
                   _setPolyline(directions['polyline_decoded']);
                 },
                 icon: Icon(Icons.search),),
