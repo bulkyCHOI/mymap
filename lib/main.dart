@@ -1,6 +1,7 @@
 //main.dart
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mymap/location_service.dart';
+import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MyApp());
 
@@ -28,8 +31,12 @@ class MapSample extends StatefulWidget {
 
 class MapSampleState extends State<MapSample> {
   Completer<GoogleMapController> _controller = Completer();
-  TextEditingController _originController = TextEditingController();
-  TextEditingController _destinationController = TextEditingController();
+  // TextEditingController _originController = TextEditingController();
+  // TextEditingController _destinationController = TextEditingController();
+  TextEditingController _seachController = TextEditingController();
+  var uuid = Uuid();
+  String _sessionToken = '122344';
+  List<dynamic> _placeList = [];
 
   Set<Marker> _markers = Set<Marker>();
   Set<Polygon> _polygons = Set<Polygon>();
@@ -50,7 +57,37 @@ class MapSampleState extends State<MapSample> {
   void initState(){
     super.initState();
     _setMarker(LatLng(37.42796133580664, -122.085749655962));
+    _seachController.addListener(() {
+      onChange();
+    });
   }
+
+  void onChange(){
+    if(_sessionToken == null){
+      setState(() {
+        _sessionToken = uuid.v4();
+      });
+    }
+    getSuggestion(_seachController.text);
+  }
+
+  void getSuggestion(String input)async{
+    String kPLACES_API_KEY = 'AIzaSyA4TgUKzpYzWqFFzik8uqtu816xAkpMhnc';
+    String baseURL = 'https//maps.googleapis.com/maps/api/place/autocomplete/json';
+    String request = '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+
+    var response = await http.get(Uri.parse(request));
+
+    print(response);
+    if(response.statusCode == 200){
+      setState(() {
+        _placeList = jsonDecode(response.body.toString()) ['predictions'];
+      });
+    }else{
+      throw Exception('Failed to load data');
+    }
+  }
+
   void _setMarker(LatLng point){
     setState(() {
       _markers.add(
@@ -106,35 +143,35 @@ class MapSampleState extends State<MapSample> {
                 child: Column(
                   children: [
                     TextFormField(
-                      controller: _originController,
+                      controller: _seachController,
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(hintText: ' Origin'),
                       onChanged: (value){
                         print(value);
                       },
                     ),
-                    TextFormField(
-                      controller: _destinationController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(hintText: ' Destination'),
-                      onChanged: (value){
-                        print(value);
-                      },
-                    ),
+                    // TextFormField(
+                    //   controller: _destinationController,
+                    //   textCapitalization: TextCapitalization.words,
+                    //   decoration: InputDecoration(hintText: ' Destination'),
+                    //   onChanged: (value){
+                    //     print(value);
+                    //   },
+                    // ),
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () async{
-                  var directions = await LocationService().getDirections(_originController.text, _destinationController.text);
-                  // var place = await LocationService().getPlace(_searchController.text);
-                  // _goToPlace(place);
-
-                  _goToPlace(directions['start_location']['lat'],directions['start_location']['lng']);
-                  _setMarker(LatLng(directions['end_location']['lat'], directions['end_location']['lng']));
-                  _setPolyline(directions['polyline_decoded']);
-                },
-                icon: Icon(Icons.search),),
+              // IconButton(
+              //   onPressed: () async{
+              //     var directions = await LocationService().getDirections(_originController.text, _destinationController.text);
+              //     // var place = await LocationService().getPlace(_searchController.text);
+              //     // _goToPlace(place);
+              //
+              //     _goToPlace(directions['start_location']['lat'],directions['start_location']['lng']);
+              //     _setMarker(LatLng(directions['end_location']['lat'], directions['end_location']['lng']));
+              //     _setPolyline(directions['polyline_decoded']);
+              //   },
+              //   icon: Icon(Icons.search),),
             ],
           ),
           Expanded(
@@ -148,10 +185,10 @@ class MapSampleState extends State<MapSample> {
                 _controller.complete(controller);
               },
               onTap: (point){
-                setState(() {
-                  polygonLatLngs.add(point);
-                  _setPolygon();
-                });
+                // setState(() {
+                //   polygonLatLngs.add(point);
+                //   _setPolygon();
+                // });
               },
             ),
           ),
@@ -159,19 +196,19 @@ class MapSampleState extends State<MapSample> {
       ),
       floatingActionButton: Stack(
         children: <Widget>[
+          // Align(
+          //   alignment: Alignment(
+          //     Alignment.topRight.x, Alignment.topRight.y +0.3
+          //   ),
+          //   child: FloatingActionButton.extended(
+          //     onPressed: _changeMapType,
+          //     label: const Text('layer'),
+          //     icon: const Icon(Icons.map),
+          //   ),
+          // ),
           Align(
             alignment: Alignment(
-              Alignment.topRight.x, Alignment.topRight.y +0.3
-            ),
-            child: FloatingActionButton.extended(
-              onPressed: _changeMapType,
-              label: const Text('layer'),
-              icon: const Icon(Icons.map),
-            ),
-          ),
-          Align(
-            alignment: Alignment(
-                Alignment.topRight.x, Alignment.topRight.y +0.5
+                Alignment.bottomLeft.x+0.1, Alignment.bottomLeft.y -0.05
             ),
             child: FloatingActionButton.extended(
               onPressed: () async{
@@ -180,6 +217,7 @@ class MapSampleState extends State<MapSample> {
                 controller.animateCamera(CameraUpdate.newCameraPosition(
                   CameraPosition(target: LatLng(position.latitude, position.longitude), zoom:15)
                 ));
+                _setMarker(LatLng(position.latitude, position.longitude));
                 // _markers.clear();
                 // _markers.add(Marker(markerId: const MarkerId('currentLocation'),position: LatLng(position.latitude, position.longitude)));
               },
