@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -49,7 +51,7 @@ class LocationService{
     return results;
   }
 
-  Future<String> getDistance(LatLng ne, LatLng sw) async {
+  Future<double> getDistance(LatLng ne, LatLng sw) async {
     String neLatLng = ne.latitude.toString()+","+ne.longitude.toString();
     String swLatLng = sw.latitude.toString()+","+sw.longitude.toString();
     print(neLatLng);
@@ -62,10 +64,11 @@ class LocationService{
     print(json);
     // print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     // var result = json['rows']['elements']['distance']['value'];
-    var result = json['rows'];
-
-    print('result: $result');
-    // return int.parse(result);
-    return result;
+    var distance = json['rows'][0]['elements'][0]['distance']['value'];
+    var zoomLevel = log2(38000*cos((ne.latitude-sw.latitude).abs())/distance/1000)+23.0;
+    print('zoomLevel: $zoomLevel');
+    return zoomLevel;
   }
+
+  int log2(num x) => (log(x) / log(2)).floor();
 }

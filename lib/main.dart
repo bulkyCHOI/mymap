@@ -298,18 +298,21 @@ class MapSampleState extends State<MapSample> {
     final double lng = place['geometry']['location']['lng'];
 
     final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: LatLng(lat, lng), zoom: 12),
-      ),
-    );
-    _setMarker(LatLng(lat, lng));
+
     var zoomLevel = _getZoomLevel(LatLng(place['geometry']['viewport']['northeast']['lat'], place['geometry']['viewport']['northeast']['lng']),
         LatLng(place['geometry']['viewport']['southwest']['lat'], place['geometry']['viewport']['southwest']['lng']));
     print('zoomLevel: $zoomLevel');
+
+    controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: LatLng(lat, lng), zoom: await zoomLevel),
+      ),
+    );
+    _setMarker(LatLng(lat, lng));
+
   }
 
-  Future<String> _getZoomLevel(LatLng ne, LatLng sw){
+  Future<double> _getZoomLevel(LatLng ne, LatLng sw){
     var result = LocationService().getDistance(ne, sw);
     return result;
   }
