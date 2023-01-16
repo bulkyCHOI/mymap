@@ -1,4 +1,5 @@
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert ;
 
@@ -23,7 +24,7 @@ class LocationService{
     var json = convert.jsonDecode(response.body);
     var results = json['result'] as Map<String, dynamic>;
 
-    // print(results);
+    print(results);
     return results;
   }
 
@@ -46,5 +47,25 @@ class LocationService{
     // print(results);
     // print("\n------------------------------------------------------------------\n");
     return results;
+  }
+
+  Future<String> getDistance(LatLng ne, LatLng sw) async {
+    String neLatLng = ne.latitude.toString()+","+ne.longitude.toString();
+    String swLatLng = sw.latitude.toString()+","+sw.longitude.toString();
+    print(neLatLng);
+    print(swLatLng);
+    final String url = 'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&mode=transit&origins=$neLatLng&destinations=$swLatLng&key=$key';
+
+    var response = await http.get(Uri.parse(url));
+    var json = convert.jsonDecode(response.body);
+
+    print(json);
+    // print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+    // var result = json['rows']['elements']['distance']['value'];
+    var result = json['rows'];
+
+    print('result: $result');
+    // return int.parse(result);
+    return result;
   }
 }
