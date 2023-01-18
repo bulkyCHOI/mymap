@@ -40,8 +40,6 @@ class MapSampleState extends State<MapSample> {
   // TextEditingController _destinationController = TextEditingController();
   TextEditingController _seachController = TextEditingController();
   FocusNode _focus = FocusNode();
-  var uuid = Uuid();
-  String _sessionToken = '122344';
   List<dynamic> _placeList = [];
 
   Set<Marker> _markers = Set<Marker>();
@@ -64,36 +62,16 @@ class MapSampleState extends State<MapSample> {
     super.initState();
     _setMarker(LatLng(37.42796133580664, -122.085749655962));
     _seachController.addListener(() {
-      if (_focus.hasFocus) onChange();
+      if (_focus.hasFocus)
+        setState(() {
+          onChange();
+        });
     });
   }
 
-  void onChange() {
-    if (_sessionToken == null) {
-      setState(() {
-        _sessionToken = uuid.v4();
-      });
-    }
-    getSuggestion(_seachController.text);
-  }
-
-  void getSuggestion(String input) async {
-    String kPLACES_API_KEY = 'AIzaSyA4TgUKzpYzWqFFzik8uqtu816xAkpMhnc';
-    String baseURL =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-    String request =
-        '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
-
-    var response = await http.get(Uri.parse(request));
-    var data = response.body.toString();
-    // print(data);
-    if (response.statusCode == 200) {
-      setState(() {
-        _placeList = jsonDecode(response.body.toString())['predictions'];
-      });
-    } else {
-      throw Exception('Failed to load data');
-    }
+  void onChange() async {
+      _placeList = await LocationService().getSuggestion(_seachController.text);
+      print(_placeList);
   }
 
   void _setMarker(LatLng point) {

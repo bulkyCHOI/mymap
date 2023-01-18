@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -71,4 +72,21 @@ class LocationService{
   }
 
   int log2(num x) => (log(x) / log(2)).floor();
+
+  Future<List<dynamic>> getSuggestion(String input) async {
+    String baseURL =
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+    String request =
+        '$baseURL?input=$input&key=$key';
+
+    var response = await http.get(Uri.parse(request));
+    // print(response.body.toString());
+    // print(data);
+    if (response.statusCode == 200) {
+        var results = jsonDecode(response.body.toString())['predictions'];
+        return results;
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
 }
