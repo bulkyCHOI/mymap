@@ -27,18 +27,7 @@ abstract class RestClient {
   Future<BasicResponse> signout();
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // 사원 관리
-  @GET('/employee/getEmployees')
-  Future<BasicResponse> getEmployees();
 
-  @POST('/employee/addNewEmployee')
-  Future<BasicResponse> addEmployee(@Body() EmpInfo empInfo);
-
-  @POST('/employee/updateEmployeeInfo')
-  Future<BasicResponse> updateEmployee(@Body() EmpInfo empInfo);
-
-  @POST('/employee/deleteEmployee')
-  Future<BasicResponse> deleteEmployee(@Body() EmpInfo empInfo);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // 기지국 관리

@@ -3,7 +3,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'map_sample.dart';
+import 'screen/google_map/map_sample.dart';
 
 
 // import 'package:latlong/latlong.dart';
