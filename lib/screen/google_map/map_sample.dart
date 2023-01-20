@@ -16,7 +16,7 @@ class MapSampleState extends State<MapSample> {
 
   // TextEditingController _originController = TextEditingController();
   // TextEditingController _destinationController = TextEditingController();
-  TextEditingController _seachController = TextEditingController();
+  TextEditingController _searchController = TextEditingController();
   FocusNode _focus = FocusNode();
   List<dynamic> _placeList = [];
 
@@ -39,17 +39,16 @@ class MapSampleState extends State<MapSample> {
   void initState() {
     super.initState();
     _setMarker(LatLng(37.42796133580664, -122.085749655962));
-    _seachController.addListener(() {
-      if (_focus.hasFocus)
-        setState(() {
-          onChange();
-        });
+    _searchController.addListener(() {
+      setState(() {
+        if (_focus.hasFocus) onChange();
+      });
     });
   }
 
   void onChange() async {
-    _placeList = await LocationService().getSuggestion(_seachController.text);
-    // print(_placeList);
+    _placeList = await LocationService().getSuggestion(_searchController.text);
+    print(_placeList);
   }
 
   void _setMarker(LatLng point) {
@@ -83,7 +82,7 @@ class MapSampleState extends State<MapSample> {
     var result = points
         .map(
           (point) => LatLng(point.latitude, point.longitude),
-    )
+        )
         .toList();
     _polylines.add(Polyline(
       polylineId: PolylineId(polylineIdVal),
@@ -95,9 +94,6 @@ class MapSampleState extends State<MapSample> {
       // ).toList(),
       points: result,
     ));
-    print(points);
-    print("\n-------------------\n");
-    print(result);
   }
 
   @override
@@ -113,9 +109,9 @@ class MapSampleState extends State<MapSample> {
               children: [
                 SizedBox(
                   child: TextFormField(
-                    controller: _seachController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(hintText: ' Seach location'),
+                    controller: _searchController,
+                    // textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(hintText: ' Search location'),
                     onChanged: (value) {
                       print(value);
                     },
@@ -129,18 +125,20 @@ class MapSampleState extends State<MapSample> {
                       itemCount: _placeList.length,
                       itemBuilder: (context, index) {
                         return ListTile(
-                          onTap: () async {
-                            // List<Location> locations = await locationFromAddress(_placeList[index]['description']);
-                            // print(_placeList[index]['description']);
-                            // print(locations.last.latitude);
-                            // print(locations.last.longitude);
-                            var place = await LocationService()
-                                .getPlace(_placeList[index]['description']);
-                            _goToPlace(place);
-                            _seachController.text =
-                            _placeList[index]['description'];
-                            _placeList.clear();
-                          },
+                          // onTap: () {
+                          //   // List<Location> locations = await locationFromAddress(_placeList[index]['description']);
+                          //   // print(_placeList[index]['description']);
+                          //   // print(locations.last.latitude);
+                          //   // print(locations.last.longitude);
+                          //   setState(() async {
+                          //     var place = await LocationService()
+                          //         .getPlace(_placeList[index]['description']);
+                          //     _goToPlace(place);
+                          //     _searchController.text =
+                          //         _placeList[index]['description'];
+                          //     _placeList.clear();
+                          //   });
+                          // },
                           title: Text(_placeList[index]['description']),
                         );
                       }),
@@ -255,8 +253,11 @@ class MapSampleState extends State<MapSample> {
 
     final GoogleMapController controller = await _controller.future;
 
-    var zoomLevel = _getZoomLevel(LatLng(place['geometry']['viewport']['northeast']['lat'], place['geometry']['viewport']['northeast']['lng']),
-        LatLng(place['geometry']['viewport']['southwest']['lat'], place['geometry']['viewport']['southwest']['lng']));
+    var zoomLevel = _getZoomLevel(
+        LatLng(place['geometry']['viewport']['northeast']['lat'],
+            place['geometry']['viewport']['northeast']['lng']),
+        LatLng(place['geometry']['viewport']['southwest']['lat'],
+            place['geometry']['viewport']['southwest']['lng']));
     print('zoomLevel: $zoomLevel');
 
     controller.animateCamera(
@@ -265,10 +266,9 @@ class MapSampleState extends State<MapSample> {
       ),
     );
     _setMarker(LatLng(lat, lng));
-
   }
 
-  Future<double> _getZoomLevel(LatLng ne, LatLng sw){
+  Future<double> _getZoomLevel(LatLng ne, LatLng sw) {
     var result = LocationService().getDistance(ne, sw);
     return result;
   }
