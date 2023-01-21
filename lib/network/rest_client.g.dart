@@ -21,7 +21,7 @@ class _RestClient implements RestClient {
   String? baseUrl;
 
   @override
-  Future<BasicResponse<dynamic>> getRadioStationList() async {
+  Future<BasicResponse<dynamic>> getRadioStationList(search_word) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -34,7 +34,7 @@ class _RestClient implements RestClient {
     )
             .compose(
               _dio.options,
-              '/rsList',
+              '/rsList/${search_word}',
               queryParameters: queryParameters,
               data: _data,
             )

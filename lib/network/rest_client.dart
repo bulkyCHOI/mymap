@@ -9,8 +9,8 @@ part 'rest_client.g.dart';
 abstract class RestClient {
   factory RestClient(Dio dio, {String baseUrl}) = _RestClient;
 
-  @GET('/rsList')
-  Future<BasicResponse> getRadioStationList();
+  @GET('/rsList/{search_word}')
+  Future<BasicResponse> getRadioStationList(@Path("search_word") String search_word);
 
   @GET('/getSuggestion/{search_word}')
   Future<BasicResponse> getSuggestion(@Path("search_word") String search_word);

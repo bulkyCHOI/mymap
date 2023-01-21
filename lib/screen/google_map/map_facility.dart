@@ -32,15 +32,16 @@ class MapFacilityState extends State<MapFacility> {
   int _polylineIdCounter = 1;
   int _markerCounter = 1;
 
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
+  static const CameraPosition _kKTHyeHwa = CameraPosition(
+
+    target: LatLng(37.57717998520996, 127.00154591255578),
     zoom: 14.4746,
   );
 
   @override
   void initState() {
     super.initState();
-    _setMarker(LatLng(37.42796133580664, -122.085749655962));
+    _setMarker(LatLng(37.57717998520996, 127.00154591255578));
     _searchController.addListener(() {
       if (_focus.hasFocus) onChange();
     });
@@ -69,7 +70,7 @@ class MapFacilityState extends State<MapFacility> {
     late RestClient client;
     Dio dio = Dio();
     client = RestClient(dio);
-    final response = await client.getRadioStationList();
+    final response = await client.getRadioStationList("강북");
     // print(response.returnCode);
     // print(response.data);
     response.data.forEach((d){
@@ -208,7 +209,7 @@ class MapFacilityState extends State<MapFacility> {
               polygons: _polygons,
               polylines: _polylines,
               mapType: _currentMapType,
-              initialCameraPosition: _kGooglePlex,
+              initialCameraPosition: _kKTHyeHwa,
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
               },
