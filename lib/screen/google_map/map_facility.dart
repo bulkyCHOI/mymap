@@ -41,32 +41,44 @@ class MapFacilityState extends State<MapFacility> {
   void initState() {
     super.initState();
     _setMarker(LatLng(37.42796133580664, -122.085749655962));
-    // getSuggestion("korea");
     _searchController.addListener(() {
       if (_focus.hasFocus) onChange();
     });
+    getrsList();
   }
 
   void onChange() async {
     // _placeList = await LocationService().getSuggestion(_searchController.text);
 
-    var response = await getSuggestion(_searchController.text);
-    setState(() {
-      _placeList = response;
-      print(_placeList);
-    });
+      if(_searchController.text == "") {
+        setState(() {
+          _placeList.clear();
+        });
+      }
+      else {
+        var response = await getSuggestion(_searchController.text);
+        setState((){
+          _placeList = response;
+          print(_placeList);
+        });
+      }
+
   }
 
-  Future<void> getrsList() async{
+  Future<void> getrsList() async {
     late RestClient client;
     Dio dio = Dio();
     client = RestClient(dio);
     final response = await client.getRadioStationList();
-    print(response.returnCode);
-    print(response.data);
+    // print(response.returnCode);
+    // print(response.data);
+    response.data.forEach((d){
+      // print(d["LATITUDE"]);
+      _setMarker(LatLng(double.parse(d["LATITUDE"]), double.parse(d["LONGITUDE"])));
+    });
   }
 
-  Future<List<dynamic>> getSuggestion(String search_word) async{
+  Future<List<dynamic>> getSuggestion(String search_word) async {
     late RestClient client;
     Dio dio = Dio();
     client = RestClient(dio);
@@ -75,6 +87,7 @@ class MapFacilityState extends State<MapFacility> {
     // print(response.data);
     return response.data;
   }
+
   void _setMarker(LatLng point) {
     setState(() {
       _markers.add(
@@ -106,7 +119,7 @@ class MapFacilityState extends State<MapFacility> {
     var result = points
         .map(
           (point) => LatLng(point.latitude, point.longitude),
-    )
+        )
         .toList();
     _polylines.add(Polyline(
       polylineId: PolylineId(polylineIdVal),
@@ -149,20 +162,20 @@ class MapFacilityState extends State<MapFacility> {
                       itemCount: _placeList.length,
                       itemBuilder: (context, index) {
                         return ListTile(
-                          // onTap: () {
-                          //   // List<Location> locations = await locationFromAddress(_placeList[index]['description']);
-                          //   // print(_placeList[index]['description']);
-                          //   // print(locations.last.latitude);
-                          //   // print(locations.last.longitude);
-                          //   setState(() async {
-                          //     var place = await LocationService()
-                          //         .getPlace(_placeList[index]['description']);
-                          //     _goToPlace(place);
-                          //     _searchController.text =
-                          //         _placeList[index]['description'];
-                          //     _placeList.clear();
-                          //   });
-                          // },
+                          onTap: () async {
+                            // List<Location> locations = await locationFromAddress(_placeList[index]['description']);
+                            // print(_placeList[index]['description']);
+                            // print(locations.last.latitude);
+                            // print(locations.last.longitude);
+                            var place = await LocationService()
+                                .getPlace(_placeList[index]['description']);
+                            setState(() {
+                              _goToPlace(place);
+                              _searchController.text =
+                                  _placeList[index]['description'];
+                              _placeList.clear();
+                            });
+                          },
                           title: Text(_placeList[index]['description']),
                         );
                       }),
