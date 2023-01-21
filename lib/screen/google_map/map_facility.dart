@@ -41,24 +41,40 @@ class MapFacilityState extends State<MapFacility> {
   void initState() {
     super.initState();
     _setMarker(LatLng(37.42796133580664, -122.085749655962));
-
-    late RestClient client;
-    Dio dio = Dio();
-    client = RestClient(dio);
-    var temp = client.getRadioStationList();
-    print(temp.);
-    // _searchController.addListener(() {
-    //   setState(() {
-    //     if (_focus.hasFocus) onChange();
-    //   });
-    // });
+    // getSuggestion("korea");
+    _searchController.addListener(() {
+      if (_focus.hasFocus) onChange();
+    });
   }
 
   void onChange() async {
-    _placeList = await LocationService().getSuggestion(_searchController.text);
-    print(_placeList);
+    // _placeList = await LocationService().getSuggestion(_searchController.text);
+
+    var response = await getSuggestion(_searchController.text);
+    setState(() {
+      _placeList = response;
+      print(_placeList);
+    });
   }
 
+  Future<void> getrsList() async{
+    late RestClient client;
+    Dio dio = Dio();
+    client = RestClient(dio);
+    final response = await client.getRadioStationList();
+    print(response.returnCode);
+    print(response.data);
+  }
+
+  Future<List<dynamic>> getSuggestion(String search_word) async{
+    late RestClient client;
+    Dio dio = Dio();
+    client = RestClient(dio);
+    final response = await client.getSuggestion(search_word);
+    // print(response.returnCode);
+    // print(response.data);
+    return response.data;
+  }
   void _setMarker(LatLng point) {
     setState(() {
       _markers.add(

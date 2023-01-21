@@ -46,9 +46,11 @@ class MapSampleState extends State<MapSample> {
     });
   }
 
-  void onChange() async {
-    _placeList = await LocationService().getSuggestion(_searchController.text);
-    print(_placeList);
+  void onChange() {
+    setState(() async{
+      _placeList = await LocationService().getSuggestion(_searchController.text);
+      print(_placeList);
+    });
   }
 
   void _setMarker(LatLng point) {
