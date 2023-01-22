@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -23,6 +24,7 @@ class MapFacilityState extends State<MapFacility> {
   List<dynamic> _placeList = [];
 
   Set<Marker> _markers = Set<Marker>();
+
   Set<Polygon> _polygons = Set<Polygon>();
   List<LatLng> polygonLatLngs = <LatLng>[];
   Set<Polyline> _polylines = Set<Polyline>();
@@ -32,8 +34,19 @@ class MapFacilityState extends State<MapFacility> {
   int _polylineIdCounter = 1;
   int _markerCounter = 1;
 
-  static const CameraPosition _kKTHyeHwa = CameraPosition(
+  BitmapDescriptor markerIcon = BitmapDescriptor.defaultMarker;
 
+  void addCustomIcon() {
+    BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(), "assets/images/radioStation.png")
+        .then((icon) {
+      setState(() {
+        markerIcon = icon;
+      });
+    });
+  }
+
+  static const CameraPosition _kKTHyeHwa = CameraPosition(
     target: LatLng(37.57717998520996, 127.00154591255578),
     zoom: 14.4746,
   );
@@ -46,24 +59,23 @@ class MapFacilityState extends State<MapFacility> {
       if (_focus.hasFocus) onChange();
     });
     getrsList();
+    addCustomIcon();
   }
 
   void onChange() async {
     // _placeList = await LocationService().getSuggestion(_searchController.text);
 
-      if(_searchController.text == "") {
-        setState(() {
-          _placeList.clear();
-        });
-      }
-      else {
-        var response = await getSuggestion(_searchController.text);
-        setState((){
-          _placeList = response;
-          print(_placeList);
-        });
-      }
-
+    if (_searchController.text == "") {
+      setState(() {
+        _placeList.clear();
+      });
+    } else {
+      var response = await getSuggestion(_searchController.text);
+      setState(() {
+        _placeList = response;
+        print(_placeList);
+      });
+    }
   }
 
   Future<void> getrsList() async {
@@ -73,9 +85,10 @@ class MapFacilityState extends State<MapFacility> {
     final response = await client.getRadioStationList("강북");
     // print(response.returnCode);
     // print(response.data);
-    response.data.forEach((d){
+    response.data.forEach((d) {
       // print(d["LATITUDE"]);
-      _setMarker(LatLng(double.parse(d["LATITUDE"]), double.parse(d["LONGITUDE"])));
+      _setMarker(
+          LatLng(double.parse(d["LATITUDE"]), double.parse(d["LONGITUDE"])));
     });
   }
 
@@ -93,8 +106,14 @@ class MapFacilityState extends State<MapFacility> {
     setState(() {
       _markers.add(
         Marker(
-            markerId: MarkerId('marker' + _markerCounter.toString()),
-            position: point),
+          markerId: MarkerId('marker' + _markerCounter.toString()),
+          position: point,
+          icon: markerIcon,
+          onTap: () =>
+          {
+            print("clicked"),
+          },
+        ),
       );
       _markerCounter++;
     });
@@ -120,7 +139,7 @@ class MapFacilityState extends State<MapFacility> {
     var result = points
         .map(
           (point) => LatLng(point.latitude, point.longitude),
-        )
+    )
         .toList();
     _polylines.add(Polyline(
       polylineId: PolylineId(polylineIdVal),
@@ -171,9 +190,10 @@ class MapFacilityState extends State<MapFacility> {
                             var place = await LocationService()
                                 .getPlace(_placeList[index]['description']);
                             setState(() {
+                              _focus.unfocus();
                               _goToPlace(place);
                               _searchController.text =
-                                  _placeList[index]['description'];
+                              _placeList[index]['description'];
                               _placeList.clear();
                             });
                           },
