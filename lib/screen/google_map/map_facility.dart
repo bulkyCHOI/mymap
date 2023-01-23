@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mymap/network/rest_client.dart';
 import 'package:mymap/screen/google_map/location_service.dart';
+import 'package:label_marker/label_marker.dart';
 
 class MapFacility extends StatefulWidget {
   @override
@@ -24,6 +25,7 @@ class MapFacilityState extends State<MapFacility> {
   List<dynamic> _placeList = [];
 
   Set<Marker> _markers = Set<Marker>();
+  Set<Marker> _labelMarkers = Set<Marker>();
 
   Set<Polygon> _polygons = Set<Polygon>();
   List<LatLng> polygonLatLngs = <LatLng>[];
@@ -38,7 +40,7 @@ class MapFacilityState extends State<MapFacility> {
 
   void addCustomIcon() {
     BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(), "assets/images/radioStation.png")
+            const ImageConfiguration(), "assets/images/radioStation.png")
         .then((icon) {
       setState(() {
         markerIcon = icon;
@@ -54,7 +56,7 @@ class MapFacilityState extends State<MapFacility> {
   @override
   void initState() {
     super.initState();
-    _setMarker(LatLng(37.57717998520996, 127.00154591255578));
+    _setMarker(LatLng(37.57717998520996, 127.00154591255578), "KT혜화지사");
     _searchController.addListener(() {
       if (_focus.hasFocus) onChange();
     });
@@ -88,7 +90,8 @@ class MapFacilityState extends State<MapFacility> {
     response.data.forEach((d) {
       // print(d["LATITUDE"]);
       _setMarker(
-          LatLng(double.parse(d["LATITUDE"]), double.parse(d["LONGITUDE"])));
+          LatLng(double.parse(d["LATITUDE"]), double.parse(d["LONGITUDE"])),
+          d["EQUIP_ID"]);
     });
   }
 
@@ -102,19 +105,35 @@ class MapFacilityState extends State<MapFacility> {
     return response.data;
   }
 
-  void _setMarker(LatLng point) {
+  void _setMarker(LatLng point, String label) {
     setState(() {
-      _markers.add(
-        Marker(
-          markerId: MarkerId('marker' + _markerCounter.toString()),
-          position: point,
-          icon: markerIcon,
-          onTap: () =>
-          {
-            print("clicked"),
-          },
+      // _markers.add(
+      //   Marker(
+      //     markerId: MarkerId('marker' + _markerCounter.toString()),
+      //     position: point,
+      //     icon: markerIcon,
+      //     onTap: () => {
+      //       print("clicked"),
+      //     },
+      //   ),
+      // );
+      _markers.addLabelMarker(LabelMarker(
+        label: label,
+        markerId: MarkerId('marker' + _markerCounter.toString()),
+        position: point,
+        onTap: () => {
+          print("clicked"),
+        },
+        textStyle: TextStyle(
+          fontSize: 15,
+          color: Colors.black,
+          letterSpacing: 1.0,
+          fontFamily: 'Roboto Bold',
         ),
-      );
+        backgroundColor: Colors.blueAccent,
+        alpha: 0.7,
+        icon: markerIcon,
+      ));
       _markerCounter++;
     });
   }
@@ -139,7 +158,7 @@ class MapFacilityState extends State<MapFacility> {
     var result = points
         .map(
           (point) => LatLng(point.latitude, point.longitude),
-    )
+        )
         .toList();
     _polylines.add(Polyline(
       polylineId: PolylineId(polylineIdVal),
@@ -193,7 +212,7 @@ class MapFacilityState extends State<MapFacility> {
                               _focus.unfocus();
                               _goToPlace(place);
                               _searchController.text =
-                              _placeList[index]['description'];
+                                  _placeList[index]['description'];
                               _placeList.clear();
                             });
                           },
@@ -225,7 +244,7 @@ class MapFacilityState extends State<MapFacility> {
           //   icon: Icon(Icons.search),),
           Expanded(
             child: GoogleMap(
-              markers: _markers,
+              markers: (_markers),
               polygons: _polygons,
               polylines: _polylines,
               mapType: _currentMapType,
@@ -275,7 +294,8 @@ class MapFacilityState extends State<MapFacility> {
                     CameraPosition(
                         target: LatLng(position.latitude, position.longitude),
                         zoom: 15)));
-                _setMarker(LatLng(position.latitude, position.longitude));
+                _setMarker(
+                    LatLng(position.latitude, position.longitude), "현재 위치");
               },
               backgroundColor: Colors.green,
               child: const Icon(Icons.location_searching),
@@ -323,7 +343,7 @@ class MapFacilityState extends State<MapFacility> {
         CameraPosition(target: LatLng(lat, lng), zoom: await zoomLevel),
       ),
     );
-    _setMarker(LatLng(lat, lng));
+    _setMarker(LatLng(lat, lng), "");
   }
 
   Future<double> _getZoomLevel(LatLng ne, LatLng sw) {
